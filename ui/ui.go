@@ -33,19 +33,16 @@ func getMiddleOfTheArray(startIndex, endIndex int) int {
 }
 
 func printCurrentWord(buffer *bytes.Buffer, word string) {
-	fmt.Print(GrayBackground + Black + word + reset)
 	buffer.WriteString(fmt.Sprintf(GrayBackground + Black + word + reset))
 
 }
 func printAttemptedWord(buffer *bytes.Buffer, word string) {
 
-	fmt.Print(Green + word + reset)
 	buffer.WriteString(fmt.Sprintf(Green + word + reset))
 
 }
 
 func printWrongWord(buffer *bytes.Buffer, word string) {
-	fmt.Print(Red + word + reset)
 	buffer.WriteString(fmt.Sprintf(Red + word + reset))
 }
 
@@ -66,7 +63,6 @@ func getLineBreak(startIndex, endIndex int) int {
 func printSpace(buffer *bytes.Buffer, noOfSpaces int) {
 
 	for i := 0; i < noOfSpaces; i++ {
-		fmt.Print(" ")
 		buffer.WriteString(" ")
 	}
 }
@@ -76,13 +72,11 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 	printTopBox(buffer, width)
 
 	lineWidth := width
-	fmt.Print(verticalLine)
 	buffer.WriteString(verticalLine)
 	for pointer := 0; pointer < len(text); {
 		word := text[pointer]
 		if lineWidth-(len(word)+1) >= 0 {
 			printWord(buffer, text, pointer, currentWord)
-			fmt.Print(" ")
 			buffer.WriteString(" ")
 			lineWidth -= (len(word) + 1)
 			pointer++
@@ -90,13 +84,10 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 
 			printSpace(buffer, lineWidth)
 			lineWidth = width
-			fmt.Printf("%s\n%s", verticalLine, verticalLine)
 			buffer.WriteString(fmt.Sprintf("%s\n%s", verticalLine, verticalLine))
 		}
 	}
 	printSpace(buffer, lineWidth)
-	fmt.Print(verticalLine)
-	fmt.Print("\n")
 	buffer.WriteString(verticalLine)
 	buffer.WriteString("\n")
 
@@ -109,15 +100,10 @@ func printWord(buffer *bytes.Buffer, text []string, pointer, currentWord int) {
 	} else if pointer < currentWord {
 		printAttemptedWord(buffer, text[pointer])
 	} else {
-		fmt.Print(text[pointer])
 		buffer.WriteString(text[pointer])
 	}
 }
 func printTopBox(buffer *bytes.Buffer, width int) {
-	fmt.Print(leftTopCorner)
-	fmt.Print(strings.Repeat(horizontalLine, width))
-	fmt.Print(rightTopCorner)
-	fmt.Print("\n")
 	buffer.WriteString(leftTopCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightTopCorner)
@@ -125,10 +111,6 @@ func printTopBox(buffer *bytes.Buffer, width int) {
 }
 func printBottomBox(buffer *bytes.Buffer, width int) {
 
-	fmt.Print(leftBottomCorner)
-	fmt.Print(strings.Repeat(horizontalLine, width))
-	fmt.Print(rightBottomCorner)
-	fmt.Print("\n")
 	buffer.WriteString(leftBottomCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightBottomCorner)
@@ -142,7 +124,6 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 
 	width := 60
 	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width)
-	fmt.Print("\n")
 	buffer.WriteString("\n")
 
 }
