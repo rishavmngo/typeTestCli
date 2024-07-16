@@ -32,17 +32,21 @@ func getMiddleOfTheArray(startIndex, endIndex int) int {
 
 }
 
-func printCurrentWord(word string) {
+func printCurrentWord(buffer *bytes.Buffer, word string) {
 	fmt.Print(GrayBackground + Black + word + reset)
+	buffer.WriteString(fmt.Sprintf(GrayBackground + Black + word + reset))
+
 }
-func printAttemptedWord(word string) {
+func printAttemptedWord(buffer *bytes.Buffer, word string) {
 
 	fmt.Print(Green + word + reset)
+	buffer.WriteString(fmt.Sprintf(Green + word + reset))
 
 }
 
-func printWrongWord(word string) {
+func printWrongWord(buffer *bytes.Buffer, word string) {
 	fmt.Print(Red + word + reset)
+	buffer.WriteString(fmt.Sprintf(Red + word + reset))
 }
 
 func getChunkRange(words []string, currentIndex, W int) (int, int) {
@@ -55,34 +59,15 @@ func getChunkRange(words []string, currentIndex, W int) (int, int) {
 	return startIndex, endIndex
 }
 
-func printWordRange(words []string, currentIndex, startIndex, endIndex int) {
-
-	for i := startIndex; i <= endIndex; i++ {
-		word := words[i]
-		if i < currentIndex {
-			printAttemptedWord(word)
-
-		} else if i == currentIndex {
-			printCurrentWord(word)
-		} else {
-			fmt.Print(word)
-		}
-		if i == getMiddleOfTheArray(startIndex, endIndex) {
-			fmt.Print("\n")
-			continue
-		}
-		fmt.Print(" ")
-	}
-	fmt.Print("\n")
-}
 func getLineBreak(startIndex, endIndex int) int {
 
 	return getMiddleOfTheArray(startIndex, endIndex)
 }
-func printSpace(noOfSpaces int) {
+func printSpace(buffer *bytes.Buffer, noOfSpaces int) {
 
 	for i := 0; i < noOfSpaces; i++ {
 		fmt.Print(" ")
+		buffer.WriteString(" ")
 	}
 }
 
@@ -92,35 +77,40 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 
 	lineWidth := width
 	fmt.Print(verticalLine)
+	buffer.WriteString(verticalLine)
 	for pointer := 0; pointer < len(text); {
 		word := text[pointer]
 		if lineWidth-(len(word)+1) >= 0 {
-			printWord(text, pointer, currentWord)
+			printWord(buffer, text, pointer, currentWord)
 			fmt.Print(" ")
+			buffer.WriteString(" ")
 			lineWidth -= (len(word) + 1)
 			pointer++
 		} else {
 
-			printSpace(lineWidth)
+			printSpace(buffer, lineWidth)
 			lineWidth = width
 			fmt.Printf("%s\n%s", verticalLine, verticalLine)
+			buffer.WriteString(fmt.Sprintf("%s\n%s", verticalLine, verticalLine))
 		}
 	}
-	printSpace(lineWidth)
+	printSpace(buffer, lineWidth)
 	fmt.Print(verticalLine)
 	fmt.Print("\n")
+	buffer.WriteString(verticalLine)
+	buffer.WriteString("\n")
 
-	printBottomBox(width)
+	printBottomBox(buffer, width)
 }
 
-func printWord(text []string, pointer, currentWord int) {
+func printWord(buffer *bytes.Buffer, text []string, pointer, currentWord int) {
 	if pointer == currentWord {
-		printCurrentWord(text[pointer])
+		printCurrentWord(buffer, text[pointer])
 	} else if pointer < currentWord {
-		printAttemptedWord(text[pointer])
+		printAttemptedWord(buffer, text[pointer])
 	} else {
-
 		fmt.Print(text[pointer])
+		buffer.WriteString(text[pointer])
 	}
 }
 func printTopBox(buffer *bytes.Buffer, width int) {
@@ -144,34 +134,6 @@ func printBottomBox(buffer *bytes.Buffer, width int) {
 	buffer.WriteString(rightBottomCorner)
 	buffer.WriteString("\n")
 }
-func PrintBoxedText(text []string, width, startIndex, endIndex int) {
-
-	height := 2
-
-	fmt.Print(leftTopCorner)
-	fmt.Print(strings.Repeat(horizontalLine, width))
-	fmt.Print(rightTopCorner)
-	fmt.Print("\n")
-	j := startIndex
-	for i := 0; i < height; i++ {
-		fmt.Print(strings.Repeat(verticalLine, 1))
-		lastWordIndex := getMiddleOfTheArray(startIndex, endIndex)
-		if i > 0 {
-			lastWordIndex = endIndex
-		}
-		for j <= lastWordIndex {
-			fmt.Print(text[j])
-			fmt.Print(" ")
-			j++
-		}
-		fmt.Print(strings.Repeat(verticalLine, 1))
-		fmt.Print("\n")
-	}
-	fmt.Print(leftBottomCorner)
-	fmt.Print(strings.Repeat(horizontalLine, width))
-	fmt.Print(rightBottomCorner)
-	fmt.Print("\n")
-}
 
 func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLetter int) {
 	windowSize := 25
@@ -181,5 +143,6 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 	width := 60
 	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width)
 	fmt.Print("\n")
+	buffer.WriteString("\n")
 
 }
