@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/signal"
@@ -8,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/nexidian/gocliselect"
+	"github.com/typeTest/ui"
 	"golang.org/x/term"
 )
 
@@ -21,12 +23,11 @@ const (
 
 func main() {
 
-	blackText := "\033[30m"
-	grayBackground := "\033[47m"
-	reset := "\033[0m"
+	var buffer bytes.Buffer
 
-	// Text with black color and gray background
-	fmt.Println(grayBackground + blackText + " This is a text with black color and gray background " + reset)
+	strArray := strings.Split("Paragraphs are the building blocks of papers. Many students define paragraphs in terms of length: a paragraph is a group of at least five sentences, a paragraph is half a page long, etc. In reality, though, the unity and coherence of ideas among sentences is what constitutes a paragraph", " ")
+	ui.RenderTextBox(&buffer, strArray, 35, 0)
+
 	menu := gocliselect.NewMenu("Chose a colour")
 	menu.AddItem("Red", "red")
 	menu.AddItem("Blue", "blue")
@@ -39,10 +40,6 @@ func main() {
 	fmt.Print(strings.Repeat("\n", paddingY))
 	fmt.Print(strings.Repeat(" ", paddingX))
 	fmt.Print("Center\n")
-	choice := menu.Display()
-	if choice == "red" {
-		return
-	}
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
@@ -58,6 +55,7 @@ func main() {
 		os.Exit(0)
 	}()
 
+	return
 	fmt.Println("Terminal is now in raw mode. Type 'exit' to quit.")
 	buf := make([]byte, 1)
 	var input string

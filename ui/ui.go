@@ -1,10 +1,185 @@
 package ui
 
-func RenderText(text []string, currentWord, currentLetter int) {
-	leftTopCorner := '╔'
-	leftBottomCorner := '╚'
-	straightLine := '║'
-	rightTopCorner := '╗'
-	rightBottomCorner := '╝'
+import (
+	"bytes"
+	"fmt"
+	"math"
+	"strings"
+)
+
+var leftTopCorner = "╔"
+var leftBottomCorner = "╚"
+var rightTopCorner = "╗"
+var rightBottomCorner = "╝"
+var horizontalLine = "═"
+var verticalLine = "║"
+var Reset = "\033[0m"
+var Red = "\033[31m"
+var Green = "\033[32m"
+var Yellow = "\033[33m"
+var Blue = "\033[34m"
+var Black = "\033[30m"
+var Magenta = "\033[35m"
+var Cyan = "\033[36m"
+var Gray = "\033[37m"
+var GrayBackground = "\033[47m"
+var White = "\033[97m"
+var reset = "\033[0m"
+
+func getMiddleOfTheArray(startIndex, endIndex int) int {
+
+	return startIndex + (endIndex-startIndex)/2
+
+}
+
+func printCurrentWord(word string) {
+	fmt.Print(GrayBackground + Black + word + reset)
+}
+func printAttemptedWord(word string) {
+
+	fmt.Print(Green + word + reset)
+
+}
+
+func printWrongWord(word string) {
+	fmt.Print(Red + word + reset)
+}
+
+func getChunkRange(words []string, currentIndex, W int) (int, int) {
+
+	T := len(words)
+	chunkNumber := int(math.Floor(float64(currentIndex) / float64(W)))
+
+	startIndex := chunkNumber * W
+	endIndex := int(math.Min(float64(startIndex+W-1), float64(T-1)))
+	return startIndex, endIndex
+}
+
+func printWordRange(words []string, currentIndex, startIndex, endIndex int) {
+
+	for i := startIndex; i <= endIndex; i++ {
+		word := words[i]
+		if i < currentIndex {
+			printAttemptedWord(word)
+
+		} else if i == currentIndex {
+			printCurrentWord(word)
+		} else {
+			fmt.Print(word)
+		}
+		if i == getMiddleOfTheArray(startIndex, endIndex) {
+			fmt.Print("\n")
+			continue
+		}
+		fmt.Print(" ")
+	}
+	fmt.Print("\n")
+}
+func getLineBreak(startIndex, endIndex int) int {
+
+	return getMiddleOfTheArray(startIndex, endIndex)
+}
+func printSpace(noOfSpaces int) {
+
+	for i := 0; i < noOfSpaces; i++ {
+		fmt.Print(" ")
+	}
+}
+
+func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width int) {
+
+	printTopBox(buffer, width)
+
+	lineWidth := width
+	fmt.Print(verticalLine)
+	for pointer := 0; pointer < len(text); {
+		word := text[pointer]
+		if lineWidth-(len(word)+1) >= 0 {
+			printWord(text, pointer, currentWord)
+			fmt.Print(" ")
+			lineWidth -= (len(word) + 1)
+			pointer++
+		} else {
+
+			printSpace(lineWidth)
+			lineWidth = width
+			fmt.Printf("%s\n%s", verticalLine, verticalLine)
+		}
+	}
+	printSpace(lineWidth)
+	fmt.Print(verticalLine)
+	fmt.Print("\n")
+
+	printBottomBox(width)
+}
+
+func printWord(text []string, pointer, currentWord int) {
+	if pointer == currentWord {
+		printCurrentWord(text[pointer])
+	} else if pointer < currentWord {
+		printAttemptedWord(text[pointer])
+	} else {
+
+		fmt.Print(text[pointer])
+	}
+}
+func printTopBox(buffer *bytes.Buffer, width int) {
+	fmt.Print(leftTopCorner)
+	fmt.Print(strings.Repeat(horizontalLine, width))
+	fmt.Print(rightTopCorner)
+	fmt.Print("\n")
+	buffer.WriteString(leftTopCorner)
+	buffer.WriteString(strings.Repeat(horizontalLine, width))
+	buffer.WriteString(rightTopCorner)
+	buffer.WriteString("\n")
+}
+func printBottomBox(buffer *bytes.Buffer, width int) {
+
+	fmt.Print(leftBottomCorner)
+	fmt.Print(strings.Repeat(horizontalLine, width))
+	fmt.Print(rightBottomCorner)
+	fmt.Print("\n")
+	buffer.WriteString(leftBottomCorner)
+	buffer.WriteString(strings.Repeat(horizontalLine, width))
+	buffer.WriteString(rightBottomCorner)
+	buffer.WriteString("\n")
+}
+func PrintBoxedText(text []string, width, startIndex, endIndex int) {
+
+	height := 2
+
+	fmt.Print(leftTopCorner)
+	fmt.Print(strings.Repeat(horizontalLine, width))
+	fmt.Print(rightTopCorner)
+	fmt.Print("\n")
+	j := startIndex
+	for i := 0; i < height; i++ {
+		fmt.Print(strings.Repeat(verticalLine, 1))
+		lastWordIndex := getMiddleOfTheArray(startIndex, endIndex)
+		if i > 0 {
+			lastWordIndex = endIndex
+		}
+		for j <= lastWordIndex {
+			fmt.Print(text[j])
+			fmt.Print(" ")
+			j++
+		}
+		fmt.Print(strings.Repeat(verticalLine, 1))
+		fmt.Print("\n")
+	}
+	fmt.Print(leftBottomCorner)
+	fmt.Print(strings.Repeat(horizontalLine, width))
+	fmt.Print(rightBottomCorner)
+	fmt.Print("\n")
+}
+
+func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLetter int) {
+	windowSize := 25
+
+	startIndex, endIndex := getChunkRange(text, currentWord, windowSize)
+
+	width := 60
+	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width)
+	fmt.Print("\n")
 
 }
