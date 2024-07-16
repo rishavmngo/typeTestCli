@@ -67,7 +67,7 @@ func printSpace(buffer *bytes.Buffer, noOfSpaces int) {
 	}
 }
 
-func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width int) {
+func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width int, wrongFlag bool) {
 
 	printTopBox(buffer, width)
 
@@ -76,7 +76,7 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 	for pointer := 0; pointer < len(text); {
 		word := text[pointer]
 		if lineWidth-(len(word)+1) >= 0 {
-			printWord(buffer, text, pointer, currentWord)
+			printWord(buffer, text, pointer, currentWord, wrongFlag)
 			buffer.WriteString(" ")
 			lineWidth -= (len(word) + 1)
 			pointer++
@@ -84,19 +84,25 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 
 			printSpace(buffer, lineWidth)
 			lineWidth = width
-			buffer.WriteString(fmt.Sprintf("%s\n%s", verticalLine, verticalLine))
+			buffer.WriteString(fmt.Sprintf("%s\r\n%s", verticalLine, verticalLine))
 		}
 	}
 	printSpace(buffer, lineWidth)
 	buffer.WriteString(verticalLine)
-	buffer.WriteString("\n")
+	buffer.WriteString("\r\n")
 
 	printBottomBox(buffer, width)
 }
 
-func printWord(buffer *bytes.Buffer, text []string, pointer, currentWord int) {
+func printWord(buffer *bytes.Buffer, text []string, pointer, currentWord int, wrongFlag bool) {
 	if pointer == currentWord {
-		printCurrentWord(buffer, text[pointer])
+		if wrongFlag {
+			printWrongWord(buffer, text[pointer])
+
+		} else {
+
+			printCurrentWord(buffer, text[pointer])
+		}
 	} else if pointer < currentWord {
 		printAttemptedWord(buffer, text[pointer])
 	} else {
@@ -107,23 +113,32 @@ func printTopBox(buffer *bytes.Buffer, width int) {
 	buffer.WriteString(leftTopCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightTopCorner)
-	buffer.WriteString("\n")
+	buffer.WriteString("\r\n")
 }
 func printBottomBox(buffer *bytes.Buffer, width int) {
 
 	buffer.WriteString(leftBottomCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightBottomCorner)
-	buffer.WriteString("\n")
+	buffer.WriteString("\r\n")
 }
 
-func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLetter int) {
+func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLetter int, wrongFlag bool) {
 	windowSize := 25
 
 	startIndex, endIndex := getChunkRange(text, currentWord, windowSize)
 
 	width := 60
-	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width)
-	buffer.WriteString("\n")
+	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width, wrongFlag)
+	buffer.WriteString("\r\n")
+
+}
+
+func RenderInputBox(buffer *bytes.Buffer, text string) {
+	width := 60
+	printTopBox(buffer, width)
+	buffer.WriteString(text)
+	buffer.WriteString("\r\n")
+	printBottomBox(buffer, width)
 
 }
