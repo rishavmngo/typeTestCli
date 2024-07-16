@@ -3,12 +3,16 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/typeTest/ui"
-	"golang.org/x/term"
+	"math"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
+
+	"github.com/typeTest/menu"
+	"github.com/typeTest/ui"
+	"golang.org/x/term"
 )
 
 func clearScreen(buffer *bytes.Buffer) {
@@ -45,6 +49,8 @@ var str2 = "hello my name is rishav and i am a computer engineer"
 
 func main() {
 
+	var startTime time.Time
+
 	var buffer bytes.Buffer
 
 	strArray := strings.Split(str2, " ")
@@ -71,6 +77,7 @@ func main() {
 
 	wrongFlag := false
 
+	alreadyStarted := false
 	for {
 		// buffer.Reset()
 		clearScreen(&buffer)
@@ -85,7 +92,13 @@ func main() {
 			fmt.Println("Error reading input:", err)
 			break
 		}
+
 		if n > 0 {
+			if !alreadyStarted {
+
+				startTime = time.Now()
+				alreadyStarted = true
+			}
 			if inpChar[0] == 3 {
 				break
 			}
@@ -93,7 +106,6 @@ func main() {
 				break
 			}
 			if inpChar[0] == '\r' || inpChar[0] == '\n' {
-				input = ""
 			} else if inpChar[0] == 127 {
 
 				inputLength := len(input)
@@ -119,8 +131,25 @@ func main() {
 			}
 
 			if checkForEnd(currentWord, len(strArray)) {
-				input = "finish"
-				break
+				duration := time.Since(startTime)
+
+				clearScreen(&buffer)
+				buffer.WriteString(fmt.Sprintf("Your speed is %.2f WPM\r\n", math.Round(float64(currentWord-1)/duration.Minutes())))
+
+				_, err := buffer.WriteTo(os.Stdout)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
+				}
+				choice := menu.RenderMenu()
+				if choice == "restart" {
+					input = ""
+					currentWord = 0
+					alreadyStarted = false
+					wrongFlag = false
+					clearScreen(&buffer)
+				} else if choice == "exit" {
+					break
+				}
 			}
 			wrongFlag = checkForTypo(input, strArray[currentWord])
 		}
