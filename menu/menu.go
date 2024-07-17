@@ -31,14 +31,19 @@ func RenderSettingsMenu() string {
 	return choice
 }
 
-func RenderModeMenu() string {
+func RenderModeMenu() int {
 
 	menu := gocliselect.NewMenu("Mode")
-	menu.AddItem("Easy", "easy")
-	menu.AddItem("Advance", "advance")
-	menu.AddItem("Paragraph", "paragraph")
+	menu.AddItem("Paragraph", "0")
+	menu.AddItem("Easy", "1")
+	menu.AddItem("Advance", "2")
 	choice := menu.Display()
-	return choice
+	value, err := strconv.Atoi(choice)
+	if err != nil {
+		panic(err)
+
+	}
+	return value
 }
 
 func RenderDurationMenu() int {

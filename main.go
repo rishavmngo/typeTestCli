@@ -25,17 +25,21 @@ type sampleWord struct {
 
 type settings struct {
 	Duration int
-	Mode     string
+	Mode     int
 }
 
-func getWords() []string {
+func getWords(settings settings) []string {
 	data, err := os.ReadFile("words.json")
 	if err != nil {
 		panic(err)
 	}
 	var samples []sampleWord
 	json.Unmarshal(data, &samples)
-	return strings.Split(samples[0].Text, samples[0].Delimiter)
+	words := strings.Split(samples[settings.Mode].Text, samples[settings.Mode].Delimiter)
+	for i, word := range words {
+		words[i] = strings.TrimSpace(word)
+	}
+	return words
 }
 func getSettings() settings {
 	data, err := os.ReadFile("settings.json")
@@ -94,7 +98,7 @@ func main() {
 	}
 	var buffer bytes.Buffer
 
-	strArray := getWords()
+	strArray := getWords(settings)
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 
