@@ -137,7 +137,10 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 func RenderInputBox(buffer *bytes.Buffer, text string) {
 	width := 60
 	printTopBox(buffer, width)
+	buffer.WriteString(verticalLine)
 	buffer.WriteString(text)
+	buffer.WriteString(strings.Repeat(" ", width-len(text)))
+	buffer.WriteString(verticalLine)
 	buffer.WriteString("\r\n")
 	printBottomBox(buffer, width)
 

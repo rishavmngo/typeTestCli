@@ -5,35 +5,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/typeTest/menu"
+	"github.com/typeTest/model"
+	"github.com/typeTest/ui"
+	"github.com/typeTest/utils"
+	"golang.org/x/term"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/typeTest/menu"
-	"github.com/typeTest/ui"
-	"github.com/typeTest/utils"
-	"golang.org/x/term"
 )
 
-type sampleWord struct {
-	Text      string
-	Delimiter string
-}
-
-type settings struct {
-	Duration int
-	Mode     int
-}
-
-func getWords(settings settings) []string {
+func getWords(settings model.Settings) []string {
 	data, err := os.ReadFile("words.json")
 	if err != nil {
 		panic(err)
 	}
-	var samples []sampleWord
+	var samples []model.SampleWord
 	json.Unmarshal(data, &samples)
 	words := strings.Split(samples[settings.Mode].Text, samples[settings.Mode].Delimiter)
 	for i, word := range words {
@@ -41,12 +31,12 @@ func getWords(settings settings) []string {
 	}
 	return words
 }
-func getSettings() settings {
+func getSettings() model.Settings {
 	data, err := os.ReadFile("settings.json")
 	if err != nil {
 		panic(err)
 	}
-	var settings settings
+	var settings model.Settings
 	json.Unmarshal([]byte(data), &settings)
 	return settings
 }
@@ -55,9 +45,14 @@ var durationOfGame = 10
 
 var timerDuration = 0
 
+func gameStarted() bool {
+	return timerDuration != 0
+
+}
 func addToInput(input *string, inp string) {
 	if timerDuration == 0 {
 		timerDuration = durationOfGame
+		*input = ""
 	}
 	*input += string(inp)
 }
@@ -70,27 +65,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var settings settings = getSettings()
-	choice := menu.RenderMenu()
+	var settings model.Settings = getSettings()
 
-	switch choice {
-	case "play":
-	case "settings":
-		ui.ClearScreenStandalone()
-		choice := menu.RenderSettingsMenu()
-		if choice == "mode" {
-			ui.ClearScreenStandalone()
-			settings.Mode = menu.RenderModeMenu()
-		} else if choice == "duration" {
-			ui.ClearScreenStandalone()
-			settings.Duration = menu.RenderDurationMenu()
-		}
-	case "exit":
-		cancel()
-	}
+	menu.GreetingMenu(&settings, cancel)
 
 	durationOfGame = settings.Duration
-
 	data, err := json.Marshal(settings)
 
 	if err := os.WriteFile("settings.json", data, 0644); err != nil {
@@ -117,7 +96,7 @@ func main() {
 		cancel()
 	}()
 
-	var input string
+	var input string = "Type you monkey"
 	currentWord := 0
 
 	wrongFlag := false
@@ -153,11 +132,13 @@ func main() {
 	timerTicker := time.NewTicker(1 * time.Second)
 	defer timerTicker.Stop()
 
-	timerStr := fmt.Sprintf("%ds", durationOfGame)
+	timerStr := fmt.Sprintf("%ds\r\n", durationOfGame)
 mainLoop:
 	for {
 
-		wrongFlag = utils.CheckForTypo(input, strArray[currentWord])
+		if gameStarted() {
+			wrongFlag = utils.CheckForTypo(input, strArray[currentWord])
+		}
 		select {
 		case inp := <-inpChan:
 			switch inp {
@@ -188,10 +169,10 @@ mainLoop:
 		case <-ticker.C:
 			buffer.Reset()
 			ui.ClearScreen(&buffer)
+			buffer.WriteString(timerStr)
 			ui.RenderTextBox(&buffer, strArray, currentWord, 0, wrongFlag)
 			ui.RenderInputBox(&buffer, input)
 			// buffer.WriteString(fmt.Sprintf("%ds", timerDuration))
-			buffer.WriteString(timerStr)
 			_, err := buffer.WriteTo(os.Stdout)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
@@ -199,10 +180,9 @@ mainLoop:
 		case <-timerTicker.C:
 			if timerDuration > 0 {
 				timerDuration--
-				timerStr = fmt.Sprintf("%ds", timerDuration)
+				timerStr = fmt.Sprintf("%ds\r\n", timerDuration)
 
 				if timerDuration == 0 {
-					ticker.Stop()
 					ui.ClearScreen(&buffer)
 					speed := (currentWord * 60) / durationOfGame
 					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM", speed)
@@ -210,7 +190,17 @@ mainLoop:
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
 					}
-					break mainLoop
+					// choice := menu.ExitMenu(&settings, cancel)
+					choice := "exit"
+					if choice == "exit" {
+						ticker.Stop()
+						break mainLoop
+					} else {
+
+						timerDuration = 0
+						currentWord = 0
+						input = ""
+					}
 				}
 			}
 		case <-ctx.Done():

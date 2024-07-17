@@ -1,13 +1,16 @@
 package menu
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/nexidian/gocliselect"
+	"github.com/typeTest/model"
+	"github.com/typeTest/ui"
 )
 
 func RenderMenu() string {
-	menu := gocliselect.NewMenu("Choose a option")
+	menu := gocliselect.NewMenu("Main menu")
 	menu.AddItem("Play", "play")
 	menu.AddItem("Settings", "settings")
 	menu.AddItem("Exit", "exit")
@@ -20,6 +23,51 @@ func RenderMenu() string {
 	// fmt.Print(strings.Repeat("\n", paddingY))
 	// fmt.Print(strings.Repeat(" ", paddingX))
 	// fmt.Print("Center\n")
+}
+
+func GreetingMenu(settings *model.Settings, cancel context.CancelFunc) {
+
+	ui.ClearScreenStandalone()
+	choice := RenderMenu()
+	switch choice {
+	case "play":
+	case "settings":
+		ui.ClearScreenStandalone()
+		choice := RenderSettingsMenu()
+		if choice == "mode" {
+			ui.ClearScreenStandalone()
+			settings.Mode = RenderModeMenu()
+			// GreetingMenu(settings, cancel)
+		} else if choice == "duration" {
+			ui.ClearScreenStandalone()
+			settings.Duration = RenderDurationMenu()
+			// GreetingMenu(settings, cancel)
+		}
+	case "exit":
+		cancel()
+
+	}
+}
+
+func ExitMenu(settings *model.Settings, cancel context.CancelFunc) string {
+
+	choice := RenderMenu()
+	switch choice {
+	case "play":
+	case "settings":
+		ui.ClearScreenStandalone()
+		choice := RenderSettingsMenu()
+		if choice == "mode" {
+			ui.ClearScreenStandalone()
+			settings.Mode = RenderModeMenu()
+		} else if choice == "duration" {
+			ui.ClearScreenStandalone()
+			settings.Duration = RenderDurationMenu()
+		}
+	case "exit":
+		return "exit"
+	}
+	return "play"
 }
 
 func RenderSettingsMenu() string {
@@ -49,6 +97,7 @@ func RenderModeMenu() int {
 func RenderDurationMenu() int {
 
 	menu := gocliselect.NewMenu("Mode")
+	menu.AddItem("2", "2")
 	menu.AddItem("15", "15")
 	menu.AddItem("20", "20")
 	menu.AddItem("30", "30")
