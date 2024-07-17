@@ -147,3 +147,9 @@ func ClearScreen(buffer *bytes.Buffer) {
 	buffer.WriteString("\033[2J") // Clear the screen
 	buffer.WriteString("\033[H")  // Move the cursor to the top-left corner
 }
+
+func ClearScreenStandalone() {
+
+	fmt.Print("\033[2J") // Clear the screen
+	fmt.Print("\033[H")  // Move the cursor to the top-left corner
+}

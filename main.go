@@ -3,20 +3,49 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/typeTest/menu"
 	"github.com/typeTest/ui"
 	"github.com/typeTest/utils"
 	"golang.org/x/term"
 )
 
-var str1 = "Paragraphs are the building blocks of papers. Many students define paragraphs in terms of length: a paragraph is a group of at least five sentences, a paragraph is half a page long, etc. In reality, though, the unity and coherence of ideas among sentences is what constitutes a paragraph"
-var str2 = "hello my name is rishav and i am a computer engineer"
+type sampleWord struct {
+	Text      string
+	Delimiter string
+}
+
+type settings struct {
+	Duration int
+	Mode     string
+}
+
+func getWords() []string {
+	data, err := os.ReadFile("words.json")
+	if err != nil {
+		panic(err)
+	}
+	var samples []sampleWord
+	json.Unmarshal(data, &samples)
+	return strings.Split(samples[0].Text, samples[0].Delimiter)
+}
+func getSettings() settings {
+	data, err := os.ReadFile("settings.json")
+	if err != nil {
+		panic(err)
+	}
+	var settings settings
+	json.Unmarshal([]byte(data), &settings)
+	return settings
+}
 
 var durationOfGame = 10
 
@@ -31,12 +60,41 @@ func addToInput(input *string, inp string) {
 
 func main() {
 
+	var greettingScreen bytes.Buffer
+	greettingScreen.WriteString("hello")
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	var settings settings = getSettings()
+	choice := menu.RenderMenu()
+
+	switch choice {
+	case "play":
+	case "settings":
+		ui.ClearScreenStandalone()
+		choice := menu.RenderSettingsMenu()
+		if choice == "mode" {
+			ui.ClearScreenStandalone()
+			settings.Mode = menu.RenderModeMenu()
+		} else if choice == "duration" {
+			ui.ClearScreenStandalone()
+			settings.Duration = menu.RenderDurationMenu()
+		}
+	case "exit":
+		cancel()
+	}
+
+	durationOfGame = settings.Duration
+
+	data, err := json.Marshal(settings)
+
+	if err := os.WriteFile("settings.json", data, 0644); err != nil {
+		log.Fatalf("failed to write  file: %s", err)
+	}
 	var buffer bytes.Buffer
 
-	strArray := strings.Split(str1, " ")
+	strArray := getWords()
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 
