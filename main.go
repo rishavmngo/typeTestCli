@@ -2,58 +2,41 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"math"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/typeTest/menu"
 	"github.com/typeTest/ui"
+	"github.com/typeTest/utils"
 	"golang.org/x/term"
 )
-
-func clearScreen(buffer *bytes.Buffer) {
-	buffer.WriteString("\033[2J") // Clear the screen
-	buffer.WriteString("\033[H")  // Move the cursor to the top-left corner
-}
-
-const (
-	Reset  = "\033[0m"
-	Red    = "\033[31m"
-	Green  = "\033[32m"
-	Yellow = "\033[33m"
-	Blue   = "\033[34m"
-)
-
-func checkForEnd(currentWord, lenOfText int) bool {
-
-	return currentWord == lenOfText
-
-}
-
-func checkForTypo(input, str string) bool {
-
-	if len(input) <= len(str) && input == str[:len(input)] {
-		return false
-	} else {
-		return true
-	}
-
-}
 
 var str1 = "Paragraphs are the building blocks of papers. Many students define paragraphs in terms of length: a paragraph is a group of at least five sentences, a paragraph is half a page long, etc. In reality, though, the unity and coherence of ideas among sentences is what constitutes a paragraph"
 var str2 = "hello my name is rishav and i am a computer engineer"
 
+var durationOfGame = 10
+
+var timerDuration = 0
+
+func addToInput(input *string, inp string) {
+	if timerDuration == 0 {
+		timerDuration = durationOfGame
+	}
+	*input += string(inp)
+}
+
 func main() {
 
-	var startTime time.Time
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	var buffer bytes.Buffer
 
-	strArray := strings.Split(str2, " ")
+	strArray := strings.Split(str1, " ")
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 
@@ -62,98 +45,116 @@ func main() {
 	}
 
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigCh
-		term.Restore(int(os.Stdin.Fd()), oldState)
-		os.Exit(0)
+		// term.Restore(int(os.Stdin.Fd()), oldState)
+		// os.Exit(0)
+		cancel()
 	}()
 
-	inpChar := make([]byte, 1)
 	var input string
-
 	currentWord := 0
 
 	wrongFlag := false
+	// alreadyStarted := false
 
-	alreadyStarted := false
+	inpChan := make(chan byte)
+
+	go func() {
+		defer close(inpChan)
+
+		inpCh := make([]byte, 1)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				n, err := os.Stdin.Read(inpCh)
+				if err != nil {
+					fmt.Println("Error reading input:", err)
+					close(inpChan)
+				}
+				if n > 0 {
+					inpChan <- inpCh[0]
+				}
+			}
+		}
+
+	}()
+
+	ticker := time.NewTicker(50 * time.Millisecond)
+	defer ticker.Stop()
+	timerTicker := time.NewTicker(1 * time.Second)
+	defer timerTicker.Stop()
+
+	timerStr := fmt.Sprintf("%ds", durationOfGame)
+mainLoop:
 	for {
-		// buffer.Reset()
-		clearScreen(&buffer)
-		ui.RenderTextBox(&buffer, strArray, currentWord, 0, wrongFlag)
-		ui.RenderInputBox(&buffer, input)
-		_, err := buffer.WriteTo(os.Stdout)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
-		}
-		n, err := os.Stdin.Read(inpChar)
-		if err != nil {
-			fmt.Println("Error reading input:", err)
-			break
-		}
 
-		if n > 0 {
-			if !alreadyStarted {
-
-				startTime = time.Now()
-				alreadyStarted = true
-			}
-			if inpChar[0] == 3 {
-				break
-			}
-			if input == "exit" {
-				break
-			}
-			if inpChar[0] == '\r' || inpChar[0] == '\n' {
-			} else if inpChar[0] == 127 {
+		wrongFlag = utils.CheckForTypo(input, strArray[currentWord])
+		select {
+		case inp := <-inpChan:
+			switch inp {
+			case '\n':
+			case '\r':
+			case 3:
+				cancel()
+				break mainLoop
+			case 127:
 
 				inputLength := len(input)
 				if inputLength > 0 {
 					input = input[:inputLength-1]
 				}
-
-			} else if inpChar[0] == 23 {
-
+			case 23:
 				inputArray := strings.Split(input, " ")
 				input = strings.Join(inputArray[:len(inputArray)-1], " ")
-
-			} else if inpChar[0] == 32 {
+			case 32:
 				if !wrongFlag {
 					input = ""
 					currentWord++
 				} else {
-
-					input += string(inpChar[0])
+					addToInput(&input, string(inp))
 				}
-			} else {
-				input += string(inpChar[0])
+			default:
+				addToInput(&input, string(inp))
 			}
+		case <-ticker.C:
+			buffer.Reset()
+			ui.ClearScreen(&buffer)
+			ui.RenderTextBox(&buffer, strArray, currentWord, 0, wrongFlag)
+			ui.RenderInputBox(&buffer, input)
+			// buffer.WriteString(fmt.Sprintf("%ds", timerDuration))
+			buffer.WriteString(timerStr)
+			_, err := buffer.WriteTo(os.Stdout)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
+			}
+		case <-timerTicker.C:
+			if timerDuration > 0 {
+				timerDuration--
+				timerStr = fmt.Sprintf("%ds", timerDuration)
 
-			if checkForEnd(currentWord, len(strArray)) {
-				duration := time.Since(startTime)
-
-				clearScreen(&buffer)
-				buffer.WriteString(fmt.Sprintf("Your speed is %.2f WPM\r\n", math.Round(float64(currentWord-1)/duration.Minutes())))
-
-				_, err := buffer.WriteTo(os.Stdout)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
-				}
-				choice := menu.RenderMenu()
-				if choice == "restart" {
-					input = ""
-					currentWord = 0
-					alreadyStarted = false
-					wrongFlag = false
-					clearScreen(&buffer)
-				} else if choice == "exit" {
-					break
+				if timerDuration == 0 {
+					ticker.Stop()
+					ui.ClearScreen(&buffer)
+					speed := (currentWord * 60) / durationOfGame
+					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM", speed)
+					_, err := buffer.WriteTo(os.Stdout)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
+					}
+					break mainLoop
 				}
 			}
-			wrongFlag = checkForTypo(input, strArray[currentWord])
+		case <-ctx.Done():
+			break mainLoop
 		}
 	}
 
-	fmt.Println("Exiting...")
+	fmt.Println("\r\nExiting...")
 }

@@ -142,3 +142,8 @@ func RenderInputBox(buffer *bytes.Buffer, text string) {
 	printBottomBox(buffer, width)
 
 }
+
+func ClearScreen(buffer *bytes.Buffer) {
+	buffer.WriteString("\033[2J") // Clear the screen
+	buffer.WriteString("\033[H")  // Move the cursor to the top-left corner
+}

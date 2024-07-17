@@ -6,7 +6,7 @@ import (
 
 func RenderMenu() string {
 	menu := gocliselect.NewMenu("Chose a option")
-	menu.AddItem("Restart", "restart")
+	menu.AddItem("Play", "play")
 	menu.AddItem("Exit", "exit")
 	return menu.Display()
 	// width, height, _ := term.GetSize(0)
