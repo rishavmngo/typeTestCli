@@ -23,3 +23,8 @@
 1. Add accuracy
 2. Keep record of each game in CSV file
 3. Able to give own words
+4. Menu after the game end
+5. Adding a greeting screen
+6. Polish the score board
+7. Show active menu item
+8. Able to toggle between word and character mode
