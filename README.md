@@ -2,9 +2,13 @@
 
 ## Install
 
-1. Clone this repository or just the install.sh script file
+1. Clone this repository
 2. run the install.sh script file `./install.sh`
-3. Then you can typetest to run the game
+3. Then you can run typetest to run the game from anywhere
+
+## Settings
+
+1. You can tweak the duration and mode of the game
 
 ## Manual Install
 
