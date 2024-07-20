@@ -6,9 +6,10 @@ INSTALL_DIR="/usr/local/bin/Typetest-go"
 TARBALL="Typetest-cli.tar.gz"
 CONFIG_DIR="$HOME/.config/typeTest-go"
 # Download the tarball
-echo "Downloading typetest-go..."
-curl -L $URL -o $TARBALL
+# echo "Downloading typetest-go..."
+# curl -L $URL -o $TARBALL
 
+./build.sh
 # Create the installation directory
 echo "Creating installation directory..."
 sudo mkdir -p $INSTALL_DIR
@@ -37,5 +38,6 @@ sudo chown $USER:$USER $CONFIG_DIR/words.json
 # Clean up
 echo "Cleaning up..."
 rm $TARBALL
+rm typeTest
 
 echo "Installation completed. You can now run 'typetest' from anywhere."

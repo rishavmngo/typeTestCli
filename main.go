@@ -216,7 +216,7 @@ mainLoop:
 				inputArray := strings.Split(input, " ")
 				input = strings.Join(inputArray[:len(inputArray)-1], " ")
 			case 32:
-				if !wrongFlag {
+				if !wrongFlag && input == strArray[currentWord] {
 					input = ""
 					currentWord++
 				} else {
