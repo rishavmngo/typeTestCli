@@ -5,17 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/typeTest/menu"
-	"github.com/typeTest/model"
-	"github.com/typeTest/ui"
-	"github.com/typeTest/utils"
-	"golang.org/x/term"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	m "github.com/rishavmngo/menu-go/menu"
+	"github.com/typeTest/model"
+	"github.com/typeTest/ui"
+	"github.com/typeTest/utils"
+	"golang.org/x/term"
 )
 
 func getWords(settings model.Settings) []string {
@@ -67,7 +68,52 @@ func main() {
 
 	var settings model.Settings = getSettings()
 
-	menu.GreetingMenu(&settings, cancel)
+	// menu.GreetingMenu(&settings, cancel)
+
+	menu := m.NewMenu("Main Menu")
+
+	menu.Main.Add("Play", func() {
+		menu.Exit()
+	})
+	setting := menu.Main.Add("Settings", nil)
+	menu.Main.Add("Exit", func() {
+		os.Exit(0)
+	})
+
+	Mode := setting.Add("Mode", nil)
+	Mode.Add("Easy", func() {
+		settings.Mode = 1
+		menu.Back()
+	})
+	Mode.Add("Advance", func() {
+		settings.Mode = 2
+		menu.Back()
+	})
+	Mode.Add("Paragraph", func() {
+		settings.Mode = 0
+		menu.Back()
+	})
+
+	Duration := setting.Add("Duration", nil)
+
+	Duration.Add("10", func() {
+		settings.Duration = 10
+		menu.Back()
+	})
+	Duration.Add("30", func() {
+		settings.Duration = 30
+		menu.Back()
+	})
+	Duration.Add("60", func() {
+		settings.Duration = 60
+		menu.Back()
+	})
+	Duration.Add("120", func() {
+		settings.Duration = 120
+		menu.Back()
+	})
+
+	menu.Display()
 
 	durationOfGame = settings.Duration
 	data, err := json.Marshal(settings)
@@ -150,7 +196,7 @@ mainLoop:
 			case 127:
 
 				inputLength := len(input)
-				if inputLength > 0 {
+				if inputLength > 0 && gameStarted() {
 					input = input[:inputLength-1]
 				}
 			case 23:

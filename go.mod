@@ -4,6 +4,7 @@ go 1.22.5
 
 require (
 	github.com/nexidian/gocliselect v1.0.0
+	github.com/rishavmngo/menu-go v1.0.5
 	golang.org/x/term v0.22.0
 )
 
