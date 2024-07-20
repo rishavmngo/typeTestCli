@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Define variables
-URL="https://drive.usercontent.google.com/download?id=1Y3vGxnnRHedFEpQFeYz9Ld8P7vC5HpWq&export=download&authuser=0&confirm=t&uuid=da44af97-6716-45c2-a442-a7d7d0f85fa6&at=APZUnTVwOCpPVT2GUiQJmymbbaLz:1721448445018"
+URL="https://drive.usercontent.google.com/download?id=1xz7KFjkpt0UIy1gW2X6izodlhf49M8Fa&export=download&authuser=0&confirm=t&uuid=625eee30-d127-4432-aabf-80206bc7cb3f&at=APZUnTUIvQZfHJMEbQt3dA-eGg7x:1721459994583"
 INSTALL_DIR="/usr/local/bin/Typetest-go"
 TARBALL="Typetest-cli.tar.gz"
-
+CONFIG_DIR="$HOME/.config/typeTest-go"
 # Download the tarball
 echo "Downloading typetest-go..."
 curl -L $URL -o $TARBALL
@@ -25,6 +25,15 @@ sudo chmod +x $INSTALL_DIR/typeTest
 echo "Creating symlink..."
 sudo ln -sf $INSTALL_DIR/typeTest /usr/local/bin/typetest
 
+echo "Creating config directory..."
+mkdir -p $CONFIG_DIR
+
+echo "Copying configuration files"
+sudo cp $INSTALL_DIR/settings.json $CONFIG_DIR/
+sudo cp $INSTALL_DIR/words.json $CONFIG_DIR/
+
+sudo chown $USER:$USER $CONFIG_DIR/settings.json
+sudo chown $USER:$USER $CONFIG_DIR/words.json
 # Clean up
 echo "Cleaning up..."
 rm $TARBALL

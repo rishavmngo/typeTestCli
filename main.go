@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -19,10 +20,11 @@ import (
 	"golang.org/x/term"
 )
 
-func getWords(settings model.Settings) []string {
-	data, err := os.ReadFile("words.json")
+func loadWords(path string, settings model.Settings) []string {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
+
 	}
 	var samples []model.SampleWord
 	json.Unmarshal(data, &samples)
@@ -32,8 +34,9 @@ func getWords(settings model.Settings) []string {
 	}
 	return words
 }
-func getSettings() model.Settings {
-	data, err := os.ReadFile("settings.json")
+
+func loadSettings(path string) model.Settings {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
@@ -60,13 +63,23 @@ func addToInput(input *string, inp string) {
 
 func main() {
 
-	var greettingScreen bytes.Buffer
-	greettingScreen.WriteString("hello")
+	// var greettingScreen bytes.Buffer
+	// greettingScreen.WriteString("hello")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var settings model.Settings = getSettings()
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println("Error getting home directory:", err)
+		return
+	}
+
+	configDir := filepath.Join(homeDir, ".config/typeTest-go")
+	settingsPath := filepath.Join(configDir, "settings.json")
+	wordsPath := filepath.Join(configDir, "words.json")
+
+	var settings model.Settings = loadSettings(settingsPath)
 
 	// menu.GreetingMenu(&settings, cancel)
 
@@ -118,12 +131,12 @@ func main() {
 	durationOfGame = settings.Duration
 	data, err := json.Marshal(settings)
 
-	if err := os.WriteFile("settings.json", data, 0644); err != nil {
+	if err := os.WriteFile(settingsPath, data, 0644); err != nil {
 		log.Fatalf("failed to write  file: %s", err)
 	}
 	var buffer bytes.Buffer
 
-	strArray := getWords(settings)
+	strArray := loadWords(wordsPath, settings)
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 
