@@ -1,6 +1,12 @@
 # Typing test in the terminal
 
-## Build steps
+## Install
+
+1. Clone this repository or just the install.sh script file
+2. run the install.sh script file `./install.sh`
+3. Then you can typetest to run the game
+
+## Manual Install
 
 1. Download go with your package manager
 2. Clone this repository
