@@ -2,24 +2,30 @@
 
 TARBALL="Typetest-cli.tar.gz"
 
+GREEN='\033[0;32m'
+RESET='\033[0m'
+print_green() {
+  echo -e "${GREEN}$1${RESET}"
+}
+
 if [ -f "$TARBALL" ]; then
   rm "$TARBALL"
-  echo "File '$TARBALL' deleted."
+  print_green "File '$TARBALL' deleted."
 fi
 
-echo "Building go project"
+print_green "Building go project"
 go build -o typeTest
 
-echo "Creating temperory directory"
+print_green "Creating temperory directory"
 mkdir tempBuild
 
-echo "Copying binary, settings.json and words.json to temp folder"
+print_green "Copying binary, settings.json and words.json to temp folder"
 cp typeTest tempBuild/typeTest
 cp settings.json tempBuild/settings.json
 cp words.json tempBuild/words.json
 
-echo "Creating tar file"
+print_green "Creating tar file"
 tar -czvf $TARBALL tempBuild/
 
-echo "Deleteing tempBuild folder"
+print_green "Deleteing tempBuild folder"
 rm -rf tempBuild
