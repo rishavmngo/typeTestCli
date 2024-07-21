@@ -244,6 +244,13 @@ mainLoop:
 		case <-ticker.C:
 			buffer.Reset()
 			ui.ClearScreen(&buffer)
+			width := 60
+
+			termWidth, height, _ := term.GetSize(0)
+			paddingX := (termWidth - width) / 2
+			paddingY := (height) / 8
+			buffer.WriteString(strings.Repeat("\n", paddingY))
+			buffer.WriteString(strings.Repeat(" ", paddingX))
 			buffer.WriteString(timerStr)
 			ui.RenderTextBox(&buffer, strArray, currentWord, 0, wrongFlag)
 			ui.RenderInputBox(&buffer, input, cursorBlink)

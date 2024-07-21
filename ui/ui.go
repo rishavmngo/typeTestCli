@@ -6,6 +6,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"golang.org/x/term"
 )
 
 var leftTopCorner = "╔"
@@ -70,12 +72,16 @@ func printSpace(buffer *bytes.Buffer, noOfSpaces int) {
 
 func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width int, wrongFlag bool) {
 
+	termWidth, _, _ := term.GetSize(0)
+	paddingX := (termWidth - width) / 2
 	printTopBox(buffer, width)
 
 	lineWidth := width
+	buffer.WriteString(strings.Repeat(" ", paddingX))
 	buffer.WriteString(verticalLine)
 	for pointer := 0; pointer < len(text); {
 		word := text[pointer]
+		// buffer.WriteString(strings.Repeat(" ", paddingX))
 		if lineWidth-(len(word)+1) >= 0 {
 			printWord(buffer, text, pointer, currentWord, wrongFlag)
 			buffer.WriteString(" ")
@@ -85,7 +91,10 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 
 			printSpace(buffer, lineWidth)
 			lineWidth = width
-			buffer.WriteString(fmt.Sprintf("%s\r\n%s", verticalLine, verticalLine))
+			buffer.WriteString(fmt.Sprintf("%s\r\n", verticalLine))
+			buffer.WriteString(strings.Repeat(" ", paddingX))
+			buffer.WriteString(fmt.Sprintf("%s", verticalLine))
+
 		}
 	}
 	printSpace(buffer, lineWidth)
@@ -111,6 +120,10 @@ func printWord(buffer *bytes.Buffer, text []string, pointer, currentWord int, wr
 	}
 }
 func printTopBox(buffer *bytes.Buffer, width int) {
+
+	w, _, _ := term.GetSize(0)
+	paddingX := (w - width) / 2
+	buffer.WriteString(strings.Repeat(" ", paddingX))
 	buffer.WriteString(leftTopCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightTopCorner)
@@ -118,6 +131,9 @@ func printTopBox(buffer *bytes.Buffer, width int) {
 }
 func printBottomBox(buffer *bytes.Buffer, width int) {
 
+	w, _, _ := term.GetSize(0)
+	paddingX := (w - width) / 2
+	buffer.WriteString(strings.Repeat(" ", paddingX))
 	buffer.WriteString(leftBottomCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightBottomCorner)
@@ -130,6 +146,7 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 	startIndex, endIndex := getChunkRange(text, currentWord, windowSize)
 
 	width := 60
+
 	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width, wrongFlag)
 	buffer.WriteString("\r\n")
 
@@ -143,7 +160,12 @@ var hide bool = true
 func RenderInputBox(buffer *bytes.Buffer, text string, cursorBlink *time.Ticker) {
 
 	width := 60
+	termWidth, _, _ := term.GetSize(0)
+	paddingX := (termWidth - width) / 2
+
 	printTopBox(buffer, width)
+
+	buffer.WriteString(strings.Repeat(" ", paddingX))
 	buffer.WriteString(verticalLine)
 	buffer.WriteString(text)
 	select {
