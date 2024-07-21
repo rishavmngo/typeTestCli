@@ -6,6 +6,7 @@ type SampleWord struct {
 }
 
 type Settings struct {
-	Duration int
-	Mode     int
+	Duration        int
+	Mode            int
+	CursorCharacter string
 }

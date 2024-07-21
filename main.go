@@ -89,6 +89,7 @@ func main() {
 		menu.Exit()
 	})
 	setting := menu.Main.Add("Settings", nil)
+
 	menu.Main.Add("Exit", func() {
 		os.Exit(0)
 	})
@@ -123,6 +124,17 @@ func main() {
 	})
 	Duration.Add("120", func() {
 		settings.Duration = 120
+		menu.Back()
+	})
+
+	CursorCharacterMenu := setting.Add("Cursor character", nil)
+	CursorCharacterMenu.Add("UnderScore Cursor(_)", func() {
+		settings.CursorCharacter = "_"
+		menu.Back()
+	})
+	CursorCharacterMenu.Add("Pipe Cursor(|)", func() {
+
+		settings.CursorCharacter = "|"
 		menu.Back()
 	})
 
@@ -188,6 +200,10 @@ func main() {
 
 	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
+
+	cursorBlink := time.NewTicker(700 * time.Millisecond)
+	defer cursorBlink.Stop()
+
 	timerTicker := time.NewTicker(1 * time.Second)
 	defer timerTicker.Stop()
 
@@ -230,7 +246,7 @@ mainLoop:
 			ui.ClearScreen(&buffer)
 			buffer.WriteString(timerStr)
 			ui.RenderTextBox(&buffer, strArray, currentWord, 0, wrongFlag)
-			ui.RenderInputBox(&buffer, input)
+			ui.RenderInputBox(&buffer, input, cursorBlink)
 			// buffer.WriteString(fmt.Sprintf("%ds", timerDuration))
 			_, err := buffer.WriteTo(os.Stdout)
 			if err != nil {

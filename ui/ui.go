@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 )
 
 var leftTopCorner = "╔"
@@ -134,15 +135,31 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 
 }
 
-var cursor = '|'
+var CursorChar = '|'
+var cursor = CursorChar
 
-func RenderInputBox(buffer *bytes.Buffer, text string) {
+var hide bool = true
+
+func RenderInputBox(buffer *bytes.Buffer, text string, cursorBlink *time.Ticker) {
+
 	width := 60
 	printTopBox(buffer, width)
 	buffer.WriteString(verticalLine)
 	buffer.WriteString(text)
+	select {
+	case <-cursorBlink.C:
+		if hide {
+			cursor = ' '
+			hide = false
+
+		} else {
+			cursor = CursorChar
+			hide = true
+		}
+	default:
+	}
 	buffer.WriteString(string(cursor))
-	buffer.WriteString(strings.Repeat(" ", width-len(text)+1))
+	buffer.WriteString(strings.Repeat(" ", width-(len(text)+1)))
 	buffer.WriteString(verticalLine)
 	buffer.WriteString("\r\n")
 	printBottomBox(buffer, width)
