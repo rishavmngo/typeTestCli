@@ -1,114 +1,136 @@
 package menu
 
 import (
-	"context"
-	"strconv"
+	"os"
 
-	"github.com/nexidian/gocliselect"
-	"github.com/typeTest/model"
-	"github.com/typeTest/ui"
+	m "github.com/rishavmngo/menu-go/menu"
+	s "github.com/typeTest/settings"
 )
 
-func RenderMenu() string {
-	menu := gocliselect.NewMenu("Main menu")
-	menu.AddItem("Play", "play")
-	menu.AddItem("Settings", "settings")
-	menu.AddItem("Exit", "exit")
-	choice := menu.Display()
-	return choice
+func GreetingMenu() {
 
-	// width, height, _ := term.GetSize(0)
-	// paddingX := (width - len("center")) / 2
-	// paddingY := (height) / 2
-	// fmt.Print(strings.Repeat("\n", paddingY))
-	// fmt.Print(strings.Repeat(" ", paddingX))
-	// fmt.Print("Center\n")
+	settings := s.Get()
+
+	menu := m.NewMenu("Main Menu")
+
+	menu.Main.Add("Play", func() {
+		menu.Exit()
+	})
+	settingsMenu := menu.Main.Add("Settings", nil)
+
+	menu.Main.Add("Exit", func() {
+		os.Exit(0)
+	})
+
+	Mode := settingsMenu.Add("Mode", nil)
+	Mode.Add("Easy", func() {
+		settings.Mode = 1
+		menu.Back()
+	})
+	Mode.Add("Advance", func() {
+		settings.Mode = 2
+		menu.Back()
+	})
+	Mode.Add("Paragraph", func() {
+		settings.Mode = 0
+		menu.Back()
+	})
+
+	Duration := settingsMenu.Add("Duration", nil)
+
+	Duration.Add("1", func() {
+		settings.Duration = 1
+		menu.Back()
+	})
+	Duration.Add("10", func() {
+		settings.Duration = 10
+		menu.Back()
+	})
+	Duration.Add("30", func() {
+		settings.Duration = 30
+		menu.Back()
+	})
+	Duration.Add("60", func() {
+		settings.Duration = 60
+		menu.Back()
+	})
+	Duration.Add("120", func() {
+		settings.Duration = 120
+		menu.Back()
+	})
+
+	CursorCharacterMenu := settingsMenu.Add("Cursor character", nil)
+	CursorCharacterMenu.Add("UnderScore Cursor(_)", func() {
+		settings.CursorCharacter = "_"
+		menu.Back()
+	})
+	CursorCharacterMenu.Add("Pipe Cursor(|)", func() {
+
+		settings.CursorCharacter = "|"
+		menu.Back()
+	})
+
+	menu.Display()
 }
 
-func GreetingMenu(settings *model.Settings, cancel context.CancelFunc) {
+func ExitMenu() {
 
-	ui.ClearScreenStandalone()
-	choice := RenderMenu()
-	switch choice {
-	case "play":
-	case "settings":
-		ui.ClearScreenStandalone()
-		choice := RenderSettingsMenu()
-		if choice == "mode" {
-			ui.ClearScreenStandalone()
-			settings.Mode = RenderModeMenu()
-			// GreetingMenu(settings, cancel)
-		} else if choice == "duration" {
-			ui.ClearScreenStandalone()
-			settings.Duration = RenderDurationMenu()
-			// GreetingMenu(settings, cancel)
-		}
-	case "exit":
-		cancel()
+	settings := s.Get()
 
-	}
-}
+	menu := m.NewMenu("Main Menu")
 
-func ExitMenu(settings *model.Settings, cancel context.CancelFunc) string {
+	menu.Main.Add("Play again", func() {
+		menu.Exit()
+	})
+	settingsMenu := menu.Main.Add("Settings", nil)
 
-	choice := RenderMenu()
-	switch choice {
-	case "play":
-	case "settings":
-		ui.ClearScreenStandalone()
-		choice := RenderSettingsMenu()
-		if choice == "mode" {
-			ui.ClearScreenStandalone()
-			settings.Mode = RenderModeMenu()
-		} else if choice == "duration" {
-			ui.ClearScreenStandalone()
-			settings.Duration = RenderDurationMenu()
-		}
-	case "exit":
-		return "exit"
-	}
-	return "play"
-}
+	menu.Main.Add("Exit", func() {
+		os.Exit(0)
+	})
 
-func RenderSettingsMenu() string {
+	Mode := settingsMenu.Add("Mode", nil)
+	Mode.Add("Easy", func() {
+		settings.Mode = 1
+		menu.Back()
+	})
+	Mode.Add("Advance", func() {
+		settings.Mode = 2
+		menu.Back()
+	})
+	Mode.Add("Paragraph", func() {
+		settings.Mode = 0
+		menu.Back()
+	})
 
-	menu := gocliselect.NewMenu("Settings")
-	menu.AddItem("Mode", "mode")
-	menu.AddItem("Duration", "duration")
-	choice := menu.Display()
-	return choice
-}
+	Duration := settingsMenu.Add("Duration", nil)
 
-func RenderModeMenu() int {
+	Duration.Add("10", func() {
+		settings.Duration = 10
+		menu.Back()
+	})
+	Duration.Add("30", func() {
+		settings.Duration = 30
+		menu.Back()
+	})
+	Duration.Add("60", func() {
+		settings.Duration = 60
+		menu.Back()
+	})
+	Duration.Add("120", func() {
+		settings.Duration = 120
+		menu.Back()
+	})
 
-	menu := gocliselect.NewMenu("Mode")
-	menu.AddItem("Paragraph", "0")
-	menu.AddItem("Easy", "1")
-	menu.AddItem("Advance", "2")
-	choice := menu.Display()
-	value, err := strconv.Atoi(choice)
-	if err != nil {
-		panic(err)
+	CursorCharacterMenu := settingsMenu.Add("Cursor character", nil)
+	CursorCharacterMenu.Add("UnderScore Cursor(_)", func() {
+		settings.CursorCharacter = "_"
+		menu.Back()
+	})
+	CursorCharacterMenu.Add("Pipe Cursor(|)", func() {
 
-	}
-	return value
-}
+		settings.CursorCharacter = "|"
+		menu.Back()
+	})
 
-func RenderDurationMenu() int {
-
-	menu := gocliselect.NewMenu("Mode")
-	menu.AddItem("2", "2")
-	menu.AddItem("15", "15")
-	menu.AddItem("20", "20")
-	menu.AddItem("30", "30")
-	menu.AddItem("60", "60")
-	menu.AddItem("120", "120")
-	menu.AddItem("300", "300")
-	choice := menu.Display()
-	value, err := strconv.Atoi(choice)
-	if err != nil {
-		panic(err)
-
-	}
-	return value
+	menu.Display()
 }

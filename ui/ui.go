@@ -29,6 +29,11 @@ var GrayBackground = "\033[47m"
 var White = "\033[97m"
 var reset = "\033[0m"
 
+var width = 60
+var termWidth, height, _ = term.GetSize(0)
+var paddingX = (termWidth - width) / 2
+var paddingY = (height) / 8
+
 func getMiddleOfTheArray(startIndex, endIndex int) int {
 
 	return startIndex + (endIndex-startIndex)/2
@@ -72,16 +77,13 @@ func printSpace(buffer *bytes.Buffer, noOfSpaces int) {
 
 func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width int, wrongFlag bool) {
 
-	termWidth, _, _ := term.GetSize(0)
-	paddingX := (termWidth - width) / 2
 	printTopBox(buffer, width)
 
 	lineWidth := width
-	buffer.WriteString(strings.Repeat(" ", paddingX))
+	MarginLeft(buffer)
 	buffer.WriteString(verticalLine)
 	for pointer := 0; pointer < len(text); {
 		word := text[pointer]
-		// buffer.WriteString(strings.Repeat(" ", paddingX))
 		if lineWidth-(len(word)+1) >= 0 {
 			printWord(buffer, text, pointer, currentWord, wrongFlag)
 			buffer.WriteString(" ")
@@ -92,7 +94,7 @@ func printEnclosedBox(buffer *bytes.Buffer, text []string, currentWord, width in
 			printSpace(buffer, lineWidth)
 			lineWidth = width
 			buffer.WriteString(fmt.Sprintf("%s\r\n", verticalLine))
-			buffer.WriteString(strings.Repeat(" ", paddingX))
+			MarginLeft(buffer)
 			buffer.WriteString(fmt.Sprintf("%s", verticalLine))
 
 		}
@@ -121,9 +123,7 @@ func printWord(buffer *bytes.Buffer, text []string, pointer, currentWord int, wr
 }
 func printTopBox(buffer *bytes.Buffer, width int) {
 
-	w, _, _ := term.GetSize(0)
-	paddingX := (w - width) / 2
-	buffer.WriteString(strings.Repeat(" ", paddingX))
+	MarginLeft(buffer)
 	buffer.WriteString(leftTopCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightTopCorner)
@@ -131,9 +131,7 @@ func printTopBox(buffer *bytes.Buffer, width int) {
 }
 func printBottomBox(buffer *bytes.Buffer, width int) {
 
-	w, _, _ := term.GetSize(0)
-	paddingX := (w - width) / 2
-	buffer.WriteString(strings.Repeat(" ", paddingX))
+	MarginLeft(buffer)
 	buffer.WriteString(leftBottomCorner)
 	buffer.WriteString(strings.Repeat(horizontalLine, width))
 	buffer.WriteString(rightBottomCorner)
@@ -144,8 +142,6 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 	windowSize := 25
 
 	startIndex, endIndex := getChunkRange(text, currentWord, windowSize)
-
-	width := 60
 
 	printEnclosedBox(buffer, text[startIndex:endIndex+1], (currentWord - startIndex), width, wrongFlag)
 	buffer.WriteString("\r\n")
@@ -159,13 +155,10 @@ var hide bool = true
 
 func RenderInputBox(buffer *bytes.Buffer, text string, cursorBlink *time.Ticker) {
 
-	width := 60
-	termWidth, _, _ := term.GetSize(0)
-	paddingX := (termWidth - width) / 2
-
 	printTopBox(buffer, width)
 
-	buffer.WriteString(strings.Repeat(" ", paddingX))
+	MarginLeft(buffer)
+	// buffer.WriteString(strings.Repeat(" ", paddingX))
 	buffer.WriteString(verticalLine)
 	buffer.WriteString(text)
 	select {
@@ -197,4 +190,14 @@ func ClearScreenStandalone() {
 
 	fmt.Print("\033[2J") // Clear the screen
 	fmt.Print("\033[H")  // Move the cursor to the top-left corner
+}
+
+func MarginTop(buffer *bytes.Buffer) {
+
+	buffer.WriteString(strings.Repeat("\n", paddingY))
+}
+
+func MarginLeft(buffer *bytes.Buffer) {
+
+	buffer.WriteString(strings.Repeat(" ", paddingX))
 }

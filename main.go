@@ -3,47 +3,19 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
-	m "github.com/rishavmngo/menu-go/menu"
-	"github.com/typeTest/model"
+	"github.com/typeTest/menu"
+	s "github.com/typeTest/settings"
 	"github.com/typeTest/ui"
 	"github.com/typeTest/utils"
 	"golang.org/x/term"
 )
-
-func loadWords(path string, settings model.Settings) []string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-
-	}
-	var samples []model.SampleWord
-	json.Unmarshal(data, &samples)
-	words := strings.Split(samples[settings.Mode].Text, samples[settings.Mode].Delimiter)
-	for i, word := range words {
-		words[i] = strings.TrimSpace(word)
-	}
-	return words
-}
-
-func loadSettings(path string) model.Settings {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	var settings model.Settings
-	json.Unmarshal([]byte(data), &settings)
-	return settings
-}
 
 var durationOfGame = 10
 
@@ -62,93 +34,25 @@ func addToInput(input *string, inp string) {
 }
 
 func main() {
-
-	// var greettingScreen bytes.Buffer
-	// greettingScreen.WriteString("hello")
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println("Error getting home directory:", err)
-		return
-	}
+	//get the setting instance
+	settings := s.Get()
+	//Load the settings from configuration
+	settings.Load()
 
-	configDir := filepath.Join(homeDir, ".config/typeTest-go")
-	settingsPath := filepath.Join(configDir, "settings.json")
-	wordsPath := filepath.Join(configDir, "words.json")
+	//Display the greeting menu
+	menu.GreetingMenu()
 
-	var settings model.Settings = loadSettings(settingsPath)
+	//Write the seetings to configuration file
+	settings.Write()
 
-	// menu.GreetingMenu(&settings, cancel)
-
-	menu := m.NewMenu("Main Menu")
-
-	menu.Main.Add("Play", func() {
-		menu.Exit()
-	})
-	setting := menu.Main.Add("Settings", nil)
-
-	menu.Main.Add("Exit", func() {
-		os.Exit(0)
-	})
-
-	Mode := setting.Add("Mode", nil)
-	Mode.Add("Easy", func() {
-		settings.Mode = 1
-		menu.Back()
-	})
-	Mode.Add("Advance", func() {
-		settings.Mode = 2
-		menu.Back()
-	})
-	Mode.Add("Paragraph", func() {
-		settings.Mode = 0
-		menu.Back()
-	})
-
-	Duration := setting.Add("Duration", nil)
-
-	Duration.Add("10", func() {
-		settings.Duration = 10
-		menu.Back()
-	})
-	Duration.Add("30", func() {
-		settings.Duration = 30
-		menu.Back()
-	})
-	Duration.Add("60", func() {
-		settings.Duration = 60
-		menu.Back()
-	})
-	Duration.Add("120", func() {
-		settings.Duration = 120
-		menu.Back()
-	})
-
-	CursorCharacterMenu := setting.Add("Cursor character", nil)
-	CursorCharacterMenu.Add("UnderScore Cursor(_)", func() {
-		settings.CursorCharacter = "_"
-		menu.Back()
-	})
-	CursorCharacterMenu.Add("Pipe Cursor(|)", func() {
-
-		settings.CursorCharacter = "|"
-		menu.Back()
-	})
-
-	menu.Display()
-
+	//Set the duration and words a/q to settings
 	durationOfGame = settings.Duration
-	data, err := json.Marshal(settings)
+	words := settings.GetWords()
 
-	if err := os.WriteFile(settingsPath, data, 0644); err != nil {
-		log.Fatalf("failed to write  file: %s", err)
-	}
 	var buffer bytes.Buffer
-
-	strArray := loadWords(wordsPath, settings)
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 
@@ -168,10 +72,10 @@ func main() {
 	}()
 
 	var input string = "Type you monkey"
+
 	currentWord := 0
 
 	wrongFlag := false
-	// alreadyStarted := false
 
 	inpChan := make(chan byte)
 
@@ -212,7 +116,7 @@ mainLoop:
 	for {
 
 		if gameStarted() {
-			wrongFlag = utils.CheckForTypo(input, strArray[currentWord])
+			wrongFlag = utils.CheckForTypo(input, words[currentWord])
 		}
 		select {
 		case inp := <-inpChan:
@@ -232,7 +136,7 @@ mainLoop:
 				inputArray := strings.Split(input, " ")
 				input = strings.Join(inputArray[:len(inputArray)-1], " ")
 			case 32:
-				if !wrongFlag && input == strArray[currentWord] {
+				if !wrongFlag && input == words[currentWord] {
 					input = ""
 					currentWord++
 				} else {
@@ -244,15 +148,11 @@ mainLoop:
 		case <-ticker.C:
 			buffer.Reset()
 			ui.ClearScreen(&buffer)
-			width := 60
 
-			termWidth, height, _ := term.GetSize(0)
-			paddingX := (termWidth - width) / 2
-			paddingY := (height) / 8
-			buffer.WriteString(strings.Repeat("\n", paddingY))
-			buffer.WriteString(strings.Repeat(" ", paddingX))
+			ui.MarginTop(&buffer)
+			ui.MarginLeft(&buffer)
 			buffer.WriteString(timerStr)
-			ui.RenderTextBox(&buffer, strArray, currentWord, 0, wrongFlag)
+			ui.RenderTextBox(&buffer, words, currentWord, 0, wrongFlag)
 			ui.RenderInputBox(&buffer, input, cursorBlink)
 			// buffer.WriteString(fmt.Sprintf("%ds", timerDuration))
 			_, err := buffer.WriteTo(os.Stdout)
@@ -272,17 +172,17 @@ mainLoop:
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
 					}
-					// choice := menu.ExitMenu(&settings, cancel)
-					choice := "exit"
-					if choice == "exit" {
-						ticker.Stop()
-						break mainLoop
-					} else {
 
-						timerDuration = 0
-						currentWord = 0
-						input = ""
-					}
+					timerTicker.Stop()
+
+					time.Sleep(2 * time.Second)
+					buf := make([]byte, 1)
+					fmt.Println("\r\nPress any key to go to main menu")
+					_, _ = os.Stdin.Read(buf)
+
+					menu.ExitMenu()
+					restart(&input, &currentWord, timerTicker, &timerStr)
+
 				}
 			}
 		case <-ctx.Done():
@@ -291,4 +191,14 @@ mainLoop:
 	}
 
 	fmt.Println("\r\nExiting...")
+}
+
+func restart(input *string, currentWord *int, timerTicker *time.Ticker, timerStr *string) {
+
+	*currentWord = 0
+	durationOfGame = 5
+	timerTicker.Reset(1 * time.Second)
+	timerDuration = 0
+	*input = "Type you monkey"
+	*timerStr = fmt.Sprintf("%ds\r\n", durationOfGame)
 }
