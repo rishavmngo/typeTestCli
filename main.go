@@ -76,7 +76,6 @@ func main() {
 	currentWord := 0
 
 	wrongFlag := false
-
 	inpChan := make(chan byte)
 
 	go func() {
@@ -175,13 +174,14 @@ mainLoop:
 
 					timerTicker.Stop()
 
-					time.Sleep(2 * time.Second)
-					buf := make([]byte, 1)
-					fmt.Println("\r\nPress any key to go to main menu")
-					_, _ = os.Stdin.Read(buf)
+					time.Sleep(1 * time.Second)
+					fmt.Printf("\r\nEnter a key to exit!")
+					inp := make([]byte, 1)
+					_, _ = os.Stdin.Read(inp)
+					os.Exit(0)
 
-					menu.ExitMenu()
-					restart(&input, &currentWord, timerTicker, &timerStr)
+					// menu.ExitMenu()
+					// restart(&input, &currentWord, timerTicker, &timerStr)
 
 				}
 			}

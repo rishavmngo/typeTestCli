@@ -38,10 +38,10 @@ func GreetingMenu() {
 
 	Duration := settingsMenu.Add("Duration", nil)
 
-	Duration.Add("1", func() {
-		settings.Duration = 1
-		menu.Back()
-	})
+	// Duration.Add("1", func() {
+	// 	settings.Duration = 1
+	// 	menu.Back()
+	// })
 	Duration.Add("10", func() {
 		settings.Duration = 10
 		menu.Back()
