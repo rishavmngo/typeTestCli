@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/typeTest/menu"
+	"github.com/typeTest/settings"
 	s "github.com/typeTest/settings"
 	"github.com/typeTest/ui"
 	"github.com/typeTest/utils"
@@ -46,7 +47,7 @@ func main() {
 	menu.GreetingMenu()
 
 	//Write the seetings to configuration file
-	settings.Write()
+	settings.Save()
 
 	//Set the duration and words a/q to settings
 	durationOfGame = settings.Duration
@@ -77,6 +78,8 @@ func main() {
 
 	wrongFlag := false
 	inpChan := make(chan byte)
+	// controlChan := make(chan bool)
+	paused := false
 
 	go func() {
 		defer close(inpChan)
@@ -88,12 +91,17 @@ func main() {
 			case <-ctx.Done():
 				return
 			default:
+
+				if paused {
+					continue
+				}
 				n, err := os.Stdin.Read(inpCh)
 				if err != nil {
 					fmt.Println("Error reading input:", err)
 					close(inpChan)
 				}
 				if n > 0 {
+
 					inpChan <- inpCh[0]
 				}
 			}
@@ -164,6 +172,7 @@ mainLoop:
 				timerStr = fmt.Sprintf("%ds\r\n", timerDuration)
 
 				if timerDuration == 0 {
+					paused = true
 					ui.ClearScreen(&buffer)
 					speed := (currentWord * 60) / durationOfGame
 					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM", speed)
@@ -174,19 +183,23 @@ mainLoop:
 
 					timerTicker.Stop()
 
-					time.Sleep(1 * time.Second)
+					time.Sleep(3 * time.Second)
 					fmt.Printf("\r\nEnter a key to exit!")
 					inp := make([]byte, 1)
 					_, _ = os.Stdin.Read(inp)
-					os.Exit(0)
 
-					// menu.ExitMenu()
-					// restart(&input, &currentWord, timerTicker, &timerStr)
+					_ = <-inpChan
+					menu.ExitMenu()
+					settings.Save()
+					wrongFlag = false
+					restart(&input, &currentWord, timerTicker, &timerStr)
+					paused = false
 
 				}
 			}
 		case <-ctx.Done():
 			break mainLoop
+		default:
 		}
 	}
 
@@ -196,7 +209,7 @@ mainLoop:
 func restart(input *string, currentWord *int, timerTicker *time.Ticker, timerStr *string) {
 
 	*currentWord = 0
-	durationOfGame = 5
+	durationOfGame = settings.Get().Duration
 	timerTicker.Reset(1 * time.Second)
 	timerDuration = 0
 	*input = "Type you monkey"

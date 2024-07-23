@@ -61,7 +61,7 @@ func (settings *Settings) Load() *Settings {
 	return settings
 }
 
-func (settings *Settings) Write() {
+func (settings *Settings) Save() {
 
 	data, err := json.Marshal(settings)
 	if err = os.WriteFile(settingsPath, data, 0644); err != nil {
