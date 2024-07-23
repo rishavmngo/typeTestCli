@@ -41,7 +41,7 @@ func main() {
 	//get the setting instance
 	settings := s.Get()
 	//Load the settings from configuration
-	settings.Load()
+	// settings.Load()
 
 	//Display the greeting menu
 	menu.GreetingMenu()
@@ -183,16 +183,15 @@ mainLoop:
 
 					timerTicker.Stop()
 
-					time.Sleep(3 * time.Second)
+					time.Sleep(2 * time.Second)
 					fmt.Printf("\r\nEnter a key to exit!")
 					inp := make([]byte, 1)
 					_, _ = os.Stdin.Read(inp)
 
 					_ = <-inpChan
 					menu.ExitMenu()
-					settings.Save()
 					wrongFlag = false
-					restart(&input, &currentWord, timerTicker, &timerStr)
+					restart(&input, &currentWord, timerTicker, &timerStr, &words)
 					paused = false
 
 				}
@@ -206,10 +205,11 @@ mainLoop:
 	fmt.Println("\r\nExiting...")
 }
 
-func restart(input *string, currentWord *int, timerTicker *time.Ticker, timerStr *string) {
+func restart(input *string, currentWord *int, timerTicker *time.Ticker, timerStr *string, words *[]string) {
 
 	*currentWord = 0
 	durationOfGame = settings.Get().Duration
+	*words = settings.Get().GetWords()
 	timerTicker.Reset(1 * time.Second)
 	timerDuration = 0
 	*input = "Type you monkey"

@@ -15,11 +15,13 @@ type SampleWord struct {
 }
 type Settings struct {
 	Duration        int
-	Mode            int
+	Mode            string
 	CursorCharacter string
 }
 
 var settings *Settings
+
+var wordMap map[string]SampleWord
 
 func getPaths() (string, string) {
 
@@ -47,6 +49,7 @@ func Get() *Settings {
 	}
 
 	settings = &Settings{}
+	settings.Load()
 
 	return settings
 
@@ -58,6 +61,7 @@ func (settings *Settings) Load() *Settings {
 		panic(err)
 	}
 	json.Unmarshal([]byte(data), &settings)
+	settings.LoadWordMap()
 	return settings
 }
 
@@ -69,16 +73,32 @@ func (settings *Settings) Save() {
 	}
 }
 
-func (settings *Settings) GetWords() []string {
+func (settings *Settings) LoadWordMap() {
 
 	data, err := os.ReadFile(wordsPath)
+
 	if err != nil {
 		panic(err)
 
 	}
-	var samples []SampleWord
-	json.Unmarshal(data, &samples)
-	words := strings.Split(samples[settings.Mode].Text, samples[settings.Mode].Delimiter)
+
+	json.Unmarshal(data, &wordMap)
+}
+
+func (settings *Settings) GetModeList() []string {
+
+	keys := make([]string, 0, len(wordMap))
+
+	for k := range wordMap {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+func (settings *Settings) GetWords() []string {
+
+	words := strings.Split(wordMap[settings.Mode].Text, wordMap[settings.Mode].Delimiter)
 	for i, word := range words {
 		words[i] = strings.TrimSpace(word)
 	}
