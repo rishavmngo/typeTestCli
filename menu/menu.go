@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"fmt"
 	"os"
 
 	m "github.com/rishavmngo/menu-go/menu"
@@ -62,10 +63,25 @@ func GreetingMenu() {
 	})
 	CursorCharacterMenu.Add("Pipe Cursor(|)", func() {
 
-		settings.CursorCharacter = "|"
+		settings.CursorCharacter = "█"
 		menu.Back()
 	})
 
+	CursorCharacterMenu.Add(fmt.Sprintf("Custom (%s)", settings.CursorCharacter), func() {
+
+		inp := make([]byte, 1)
+
+		fmt.Println("Paste your character:")
+		n, err := os.Stdin.Read(inp)
+		if err != nil {
+			panic(err)
+		}
+
+		if n > 0 {
+			settings.CursorCharacter = string(inp[0])
+		}
+		menu.Back()
+	})
 	menu.Display()
 }
 
@@ -119,7 +135,7 @@ func ExitMenu() {
 	})
 	CursorCharacterMenu.Add("Pipe Cursor(|)", func() {
 
-		settings.CursorCharacter = "|"
+		settings.CursorCharacter = "█"
 		menu.Back()
 	})
 

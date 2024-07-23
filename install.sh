@@ -11,6 +11,7 @@ RESET='\033[0m'
 
 DEFAULT_ARG1=""
 ARG1=${1:-$DEFAULT_ARG1}
+./uninstall.sh
 
 print_green() {
   echo -e "${GREEN}$1${RESET}"
