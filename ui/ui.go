@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/typeTest/settings"
 	"golang.org/x/term"
 )
 
@@ -148,8 +149,7 @@ func RenderTextBox(buffer *bytes.Buffer, text []string, currentWord, currentLett
 
 }
 
-var CursorChar = '|'
-var cursor = CursorChar
+var cursor = settings.Get().CursorCharacter
 
 var hide bool = true
 
@@ -164,16 +164,16 @@ func RenderInputBox(buffer *bytes.Buffer, text string, cursorBlink *time.Ticker)
 	select {
 	case <-cursorBlink.C:
 		if hide {
-			cursor = ' '
+			cursor = " "
 			hide = false
 
 		} else {
-			cursor = CursorChar
+			cursor = settings.Get().CursorCharacter
 			hide = true
 		}
 	default:
 	}
-	buffer.WriteString(string(cursor))
+	buffer.WriteString(cursor)
 	buffer.WriteString(strings.Repeat(" ", width-(len(text)+1)))
 	buffer.WriteString(verticalLine)
 	buffer.WriteString("\r\n")

@@ -23,25 +23,21 @@ func GreetingMenu() {
 	})
 
 	Mode := settingsMenu.Add("Mode", nil)
-	Mode.Add("Easy", func() {
-		settings.Mode = 1
-		menu.Back()
-	})
-	Mode.Add("Advance", func() {
-		settings.Mode = 2
-		menu.Back()
-	})
-	Mode.Add("Paragraph", func() {
-		settings.Mode = 0
-		menu.Back()
-	})
+
+	for _, mode := range settings.GetModeList() {
+		Mode.Add(mode, func() {
+			settings.Mode = mode
+			menu.Back()
+		})
+
+	}
 
 	Duration := settingsMenu.Add("Duration", nil)
 
-	// Duration.Add("1", func() {
-	// 	settings.Duration = 1
-	// 	menu.Back()
-	// })
+	Duration.Add("2", func() {
+		settings.Duration = 2
+		menu.Back()
+	})
 	Duration.Add("10", func() {
 		settings.Duration = 10
 		menu.Back()
@@ -89,19 +85,14 @@ func ExitMenu() {
 	})
 
 	Mode := settingsMenu.Add("Mode", nil)
-	Mode.Add("Easy", func() {
-		settings.Mode = 1
-		menu.Back()
-	})
-	Mode.Add("Advance", func() {
-		settings.Mode = 2
-		menu.Back()
-	})
-	Mode.Add("Paragraph", func() {
-		settings.Mode = 0
-		menu.Back()
-	})
 
+	for _, mode := range settings.GetModeList() {
+		Mode.Add(mode, func() {
+			settings.Mode = mode
+			menu.Back()
+		})
+
+	}
 	Duration := settingsMenu.Add("Duration", nil)
 
 	Duration.Add("10", func() {
