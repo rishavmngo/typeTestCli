@@ -48,7 +48,7 @@ func Get() *Settings {
 
 	}
 
-	settings = &Settings{}
+	settings = &Settings{Duration: 30, Mode: "easy", CursorCharacter: "|"}
 	settings.Load()
 
 	return settings
@@ -61,8 +61,22 @@ func (settings *Settings) Load() *Settings {
 		panic(err)
 	}
 	json.Unmarshal([]byte(data), &settings)
+	settings.validate()
 	settings.LoadWordMap()
 	return settings
+}
+func (settings *Settings) validate() {
+
+	if settings.Duration == 0 {
+		settings.Duration = 30
+	}
+	if settings.Mode == "" {
+		settings.Mode = "easy"
+	}
+	if settings.CursorCharacter == "" {
+		settings.CursorCharacter = "_"
+	}
+
 }
 
 func (settings *Settings) Save() {
