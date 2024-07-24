@@ -193,7 +193,7 @@ mainLoop:
 				if timerDuration == 0 {
 					paused = true
 					ui.ClearScreen(&buffer)
-					speed := (record.total / 5) * (60 / durationOfGame)
+					speed := ((record.total + record.words) / 5) * (60 / durationOfGame)
 					accuracy := float64(record.correct) / float64(record.total) * 100.0
 					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM\r\n", speed)
 					fmt.Fprintf(&buffer, "Accuracy: %0.2f %%\r\n", accuracy)
@@ -206,7 +206,7 @@ mainLoop:
 
 					timerTicker.Stop()
 
-					time.Sleep(7 * time.Second)
+					time.Sleep(3 * time.Second)
 					fmt.Printf("\r\nEnter a key to exit!")
 					inp := make([]byte, 1)
 					_, _ = os.Stdin.Read(inp)
