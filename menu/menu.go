@@ -2,6 +2,7 @@ package menu
 
 import (
 	// "bufio"
+	"bufio"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -11,6 +12,9 @@ import (
 	s "github.com/typeTest/settings"
 	"github.com/typeTest/ui"
 )
+
+var reset = "\033[0m"
+var bold = "\033[1m"
 
 func showRecord() {
 
@@ -25,20 +29,20 @@ func showRecord() {
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
 	// Print the table header
-	fmt.Fprint(writer, "Date\tMode\tSpeed (WPM)\tAccuracy\t\r\n")
+	fmt.Fprint(writer, bold+"Date\tMode\tSpeed (WPM)\tAccuracy\t\r\n"+reset)
 
 	// Print the records
 	for _, record := range records {
-		fmt.Fprintf(writer, "%s\t%s\t%d\t%.2f%%\t\r\n",
+		fmt.Fprintf(writer, "%s\t%s\t%d\t%.2f%%\t\r\n"+reset,
 			record.Date.Format("2006-01-02"), record.Mode, record.Speed, record.Accuracy)
 	}
 
 	// Flush the writer to ensure all data is written
 	writer.Flush()
 
-	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Println("Press Enter to continue...")
-	// _, _ = reader.ReadString('\n')
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("\r\n\r\nPress Enter to continue...")
+	_, _ = reader.ReadString('\n')
 }
 
 func GreetingMenu() {
