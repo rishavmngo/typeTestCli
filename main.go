@@ -26,12 +26,30 @@ func gameStarted() bool {
 	return timerDuration != 0
 
 }
-func addToInput(input *string, inp string) {
+func addToInput(input *string, inp string, words *[]string, currentWord *int) {
 	if timerDuration == 0 {
 		timerDuration = durationOfGame
 		*input = ""
 	}
 	*input += string(inp)
+	record.total += 1
+	if !utils.CheckForTypo(*input, (*words)[*currentWord]) {
+		record.correct += 1
+	}
+}
+
+type Record struct {
+	correct int
+	total   int
+	words   int
+}
+
+var record Record
+
+func (record *Record) Reset() {
+	record.correct = 0
+	record.total = 0
+	record.words = 0
 }
 
 func main() {
@@ -146,11 +164,12 @@ mainLoop:
 				if !wrongFlag && input == words[currentWord] {
 					input = ""
 					currentWord++
+					record.words += 1
 				} else {
-					addToInput(&input, string(inp))
+					addToInput(&input, string(inp), &words, &currentWord)
 				}
 			default:
-				addToInput(&input, string(inp))
+				addToInput(&input, string(inp), &words, &currentWord)
 			}
 		case <-ticker.C:
 			buffer.Reset()
@@ -174,8 +193,12 @@ mainLoop:
 				if timerDuration == 0 {
 					paused = true
 					ui.ClearScreen(&buffer)
-					speed := (currentWord * 60) / durationOfGame
-					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM", speed)
+					speed := (record.total / 5) * (60 / durationOfGame)
+					accuracy := float64(record.correct) / float64(record.total) * 100.0
+					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM\r\n", speed)
+					fmt.Fprintf(&buffer, "Accuracy: %0.2f %%\r\n", accuracy)
+					record.Reset()
+
 					_, err := buffer.WriteTo(os.Stdout)
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
@@ -183,13 +206,14 @@ mainLoop:
 
 					timerTicker.Stop()
 
-					time.Sleep(2 * time.Second)
+					time.Sleep(7 * time.Second)
 					fmt.Printf("\r\nEnter a key to exit!")
 					inp := make([]byte, 1)
 					_, _ = os.Stdin.Read(inp)
 
 					_ = <-inpChan
 					menu.ExitMenu()
+					settings.Save()
 					wrongFlag = false
 					restart(&input, &currentWord, timerTicker, &timerStr, &words)
 					paused = false
