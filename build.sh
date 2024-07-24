@@ -1,5 +1,6 @@
 #!/bin/bash
 
+trap 'echo "Script interrupted. Exiting..."; exit 1;' INT
 TARBALL="Typetest-cli.tar.gz"
 
 GREEN='\033[0;32m'

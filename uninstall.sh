@@ -1,5 +1,6 @@
 #!/bin/bash
 
+trap 'echo "Script interrupted. Exiting..."; exit 1;' INT
 TARBALL="Typetest-cli.tar.gz"
 INSTALL_DIR="/usr/local/bin/Typetest-go"
 CONFIG_DIR="$HOME/.config/typeTest-go"
