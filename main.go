@@ -7,11 +7,11 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/typeTest/menu"
-	"github.com/typeTest/record"
 	"github.com/typeTest/settings"
 	s "github.com/typeTest/settings"
 	"github.com/typeTest/ui"
@@ -97,9 +97,10 @@ func main() {
 
 	wrongFlag := false
 	inpChan := make(chan byte)
+	pauseChan := make(chan bool)
+	pause := false
 	// controlChan := make(chan bool)
-	paused := false
-
+	var mu sync.Mutex
 	go func() {
 		defer close(inpChan)
 
@@ -109,11 +110,19 @@ func main() {
 			select {
 			case <-ctx.Done():
 				return
+			case res := <-pauseChan:
+				mu.Lock()
+				pause = res
+				mu.Unlock()
 			default:
-
-				if paused {
+				mu.Lock()
+				if pause {
+					mu.Unlock()
+					time.Sleep(100 * time.Millisecond)
 					continue
 				}
+				mu.Unlock()
+
 				n, err := os.Stdin.Read(inpCh)
 				if err != nil {
 					fmt.Println("Error reading input:", err)
@@ -192,15 +201,21 @@ mainLoop:
 				timerStr = fmt.Sprintf("%ds\r\n", timerDuration)
 
 				if timerDuration == 0 {
-					paused = true
 					ui.ClearScreen(&buffer)
 					speed := ((result.total + result.words) / 5) * (60 / durationOfGame)
 					accuracy := float64(result.correct) / float64(result.total) * 100.0
 					fmt.Fprintf(&buffer, "Time's up!\r\nSpeed: %d WPM\r\n", speed)
 					fmt.Fprintf(&buffer, "Accuracy: %0.2f %%\r\n", accuracy)
-					record.Save(settings.Mode, speed, accuracy)
+					// record.Save(settings.Mode, speed, accuracy)
 					result.Reset()
 
+					var i int
+
+					fmt.Println("Press any key to continue...")
+
+					pauseChan <- true
+					fmt.Scan(&i)
+					pauseChan <- false
 					_, err := buffer.WriteTo(os.Stdout)
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "Error writing buffer to stdout: %v\n", err)
@@ -208,17 +223,10 @@ mainLoop:
 
 					timerTicker.Stop()
 
-					time.Sleep(3 * time.Second)
-					fmt.Printf("\r\nEnter a key to exit!")
-					inp := make([]byte, 1)
-					_, _ = os.Stdin.Read(inp)
-
-					_ = <-inpChan
 					menu.ExitMenu()
 					settings.Save()
 					wrongFlag = false
 					restart(&input, &currentWord, timerTicker, &timerStr, &words)
-					paused = false
 
 				}
 			}
