@@ -1,12 +1,49 @@
 package menu
 
 import (
+	// "bufio"
+	"bufio"
 	"fmt"
 	"os"
+	"text/tabwriter"
 
 	m "github.com/rishavmngo/menu-go/menu"
+	"github.com/typeTest/record"
 	s "github.com/typeTest/settings"
+	"github.com/typeTest/ui"
 )
+
+var reset = "\033[0m"
+var bold = "\033[1m"
+
+func showRecord() {
+
+	ui.ClearScreenStandalone()
+	records, err := record.ReadCSV()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Create a new tab writer
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
+
+	// Print the table header
+	fmt.Fprint(writer, bold+"Date\tMode\tSpeed (WPM)\tAccuracy\t\r\n"+reset)
+
+	// Print the records
+	for _, record := range records {
+		fmt.Fprintf(writer, "%s\t%s\t%d\t%.2f%%\t\r\n"+reset,
+			record.Date.Format("2006-01-02"), record.Mode, record.Speed, record.Accuracy)
+	}
+
+	// Flush the writer to ensure all data is written
+	writer.Flush()
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("\r\n\r\nPress Enter to continue...")
+	_, _ = reader.ReadString('\n')
+}
 
 func GreetingMenu() {
 
@@ -19,6 +56,11 @@ func GreetingMenu() {
 	})
 	settingsMenu := menu.Main.Add("Settings", nil)
 
+	menu.Main.Add("Records", func() {
+
+		showRecord()
+
+	})
 	menu.Main.Add("Exit", func() {
 		os.Exit(0)
 	})
